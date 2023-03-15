@@ -8,8 +8,8 @@
 URL=google.com
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_20MB=https://files.testfile.org/PDF%2F20MB-TESTFILE.ORG.pdf
-FILE_SIZE=21408647
+FILE_30MB=https://files.testfile.org/PDF%2F30MB-TESTFILE.ORG.pdf
+FILE_SIZE=32116471
 CYCLE=~/count
 
 
@@ -76,7 +76,7 @@ fi
 
 # Download file test
 rm -f ~/*TESTFILE.ORG.pdf
-wget $FILE_20MB -P ~/
+wget $FILE_30MB -P ~/
 if [[ $(stat -c %s ~/*TESTFILE.ORG.pdf 2> /dev/null) == "$FILE_SIZE" ]]; then
     echo "Download file: [PASSED]" >> $TEST_LOG
 else
