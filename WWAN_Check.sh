@@ -2,7 +2,7 @@
 
 
 # CREATOR: Mike Lu
-# CHANGE DATE: 2023/3/1
+# CHANGE DATE: 2023/3/20
 
 
 URL=google.com
@@ -20,14 +20,14 @@ RunScript() {
 }
 
 
-# Create cron job to run script after reboot (start time: reboot + 00:30)
+# Create cron job to run script after reboot (start time: reboot + 30 sec)
 RunScriptAfterReboot() {
     echo "@reboot sleep 30 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron
 }
 
 
-# Create cron job for S3 and resume (start time: S3=02:00  resume=00:30)
+# Create cron job for S3 and resume (start time: 02:30)
 RunS3() {
     sudo crontab -l > mycron 2> /dev/null
     grep -h "systemctl suspend" mycron 2> /dev/null
@@ -53,16 +53,16 @@ Clean() {
     crontab -r 2> /dev/null
     sudo crontab -r 2> /dev/null
     systemctl restart cron
+    # nmcli networking on
 }
 
 
 ####################################################################################
 
 
-# Get WWAN connecntion status and IP
-# echo "HW interface state: $(ip a | grep wwan0: | cut -d " " -f3 | cut -d "," -f3)" >> $TEST_LOG 
-echo "State: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG     
-echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG  
+# Get WWAN status and IP
+echo "State: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
+echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG
 
 
 # Ping URL test
@@ -73,6 +73,17 @@ else
     echo "Ping URL: [!!! FAILED !!!]" >> $TEST_LOG 
 fi
 
+
+# Open browser test
+<<COMMENT
+gnome-terminal -- firefox $URL && sleep 5
+if [[ $? == 0 ]]; then
+    echo "Open browser: [PASSED]" >> $TEST_LOG
+else
+    echo "Open browser: [!!! FAILED !!!]" >> $TEST_LOG
+fi
+killall firefox
+COMMENT
 
 # Download file test
 rm -f ~/*TESTFILE.ORG.pdf
@@ -110,7 +121,7 @@ if [[ $? != 0 ]]; then
             Clean
         fi
         if [[ $POWER_STATE != [SsRrCc] ]]; then
-          echo -e "\nWrong input!"
+          echo -e "\nWrong input! Please re-run the script." && rm -f $CYCLE
         fi
 fi
 rm -f mycron
