@@ -2,7 +2,7 @@
 
 
 # CREATOR: Mike Lu
-# CHANGE DATE: 2023/3/20
+# CHANGE DATE: 2023/3/22
 
 
 URL=google.com
@@ -60,9 +60,15 @@ Clean() {
 ####################################################################################
 
 
-# Get WWAN status and IP
-echo "State: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
-echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG
+# Get WWAN operational state and IP (Using ip command)
+echo "HW state: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
+# echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG
+
+
+# Get WWAN status and IP (Using nmcli command)
+AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
+echo "AP: ${AP_STATE^}" >> $TEST_LOG
+echo "IP: $(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)" >>  $TEST_LOG
 
 
 # Ping URL test
