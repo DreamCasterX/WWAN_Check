@@ -129,7 +129,7 @@ if [[ $? != 0 ]]; then
             Clean
         fi
         if [[ $POWER_STATE != [SsRrCc] ]]; then
-          echo -e "\nWrong input! Please re-run the script."
+          echo -e "\nWrong input! Please delete ~/count and re-run the script."
         fi
 fi
 rm -f mycron
