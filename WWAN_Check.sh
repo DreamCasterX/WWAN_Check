@@ -2,14 +2,16 @@
 
 
 # CREATOR: Mike Lu
-# CHANGE DATE: 2023/3/22
+# CHANGE DATE: 2023/6/1
 
 
-URL=google.com
+PING_URL=google.com
+PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_30MB=https://files.testfile.org/PDF%2F30MB-TESTFILE.ORG.pdf
-FILE_SIZE=32116471
+FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip
+FILE_NAME=20MB.zip
+FILE_SIZE=20971520
 CYCLE=~/count
 
 
@@ -72,7 +74,7 @@ echo "IP: $(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | 
 
 
 # Ping URL test
-ping $URL -c 10 | grep -w "0% packet loss" 
+ping $PING_URL -c 10 | grep -w "0% packet loss" 
 if [[ $? = 0 ]]; then
     echo "Ping URL: [PASSED]" >> $TEST_LOG 
 else
@@ -82,7 +84,7 @@ fi
 
 # Open browser test
 <<COMMENT
-gnome-terminal -- firefox $URL && sleep 5
+gnome-terminal -- firefox $PING_URL && sleep 5
 if [[ $? == 0 ]]; then
     echo "Open browser: [PASSED]" >> $TEST_LOG
 else
@@ -92,14 +94,14 @@ killall firefox
 COMMENT
 
 # Download file test
-rm -f ~/*TESTFILE.ORG.pdf
-wget $FILE_30MB -P ~/
-if [[ $(stat -c %s ~/*TESTFILE.ORG.pdf 2> /dev/null) == "$FILE_SIZE" ]]; then
+rm -f ~/$FILE_NAME
+wget $FILE_URL -P ~/
+if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
     echo "Download file: [PASSED]" >> $TEST_LOG
 else
     echo "Download file: [!!! FAILED !!!]" >> $TEST_LOG
 fi
-rm -f ~/*TESTFILE.ORG.pdf
+rm -f ~/$FILE_NAME
 
 
 # Output cycle and completion time to log
@@ -127,7 +129,7 @@ if [[ $? != 0 ]]; then
             Clean
         fi
         if [[ $POWER_STATE != [SsRrCc] ]]; then
-          echo -e "\nWrong input! Please re-run the script." && rm -f $CYCLE
+          echo -e "\nWrong input! Please re-run the script."
         fi
 fi
 rm -f mycron
