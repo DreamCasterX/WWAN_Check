@@ -9,8 +9,8 @@ PING_URL=google.com
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip
-FILE_NAME=20MB.zip
+FILE_URL=http://ipv4.download.thinkbroadband.com/30MB.zip
+FILE_NAME=30MB.zip
 FILE_SIZE=20971520
 CYCLE=~/count
 
