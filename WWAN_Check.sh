@@ -11,7 +11,7 @@ TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 FILE_URL=http://ipv4.download.thinkbroadband.com/30MB.zip
 FILE_NAME=30MB.zip
-FILE_SIZE=20971520
+FILE_SIZE=31457280
 CYCLE=~/count
 
 
