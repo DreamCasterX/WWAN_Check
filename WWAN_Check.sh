@@ -2,8 +2,8 @@
 
 
 # CREATOR: Mike Lu
-# CHANGE DATE: 2023/6/1
-
+# CHANGE DATE: 2024/1/17
+__version__="1.0"
 
 PING_URL=google.com
 PING_IP=8.8.8.8
@@ -60,6 +60,12 @@ Clean() {
 
 
 ####################################################################################
+
+
+# Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
+[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: PASS" >> $TEST_LOG || echo "Dmesg check: FAIL" >> $TEST_LOG
+[[ `mmcli -m any` ]] && echo "ModemManager check: PASS" >> $TEST_LOG || echo "ModemManager check: FAIL" >> $TEST_LOG
+[[ `ip a | grep 'wwan0'` ]] && echo "IP check: PASS" >> $TEST_LOG || echo "IP check: FAIL" >> $TEST_LOG
 
 
 # Get WWAN operational state and IP (Using ip command)
@@ -128,9 +134,10 @@ if [[ $? != 0 ]]; then
         if [[ $POWER_STATE == [Cc] ]]; then
             Clean
         fi
-        if [[ $POWER_STATE != [SsRrCc] ]]; then
-          echo -e "\nWrong input! Please delete ~/count and re-run the script."
-        fi
+        while [[ $POWER_STATE != [SsRrCc] ]]; do
+          echo -e "Wrong input!\n"
+          read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+        done
 fi
 rm -f mycron
 
