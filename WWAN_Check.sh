@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
 
-# CREATOR: Mike Lu
-# CHANGE DATE: 2024/1/17
-__version__="1.0"
+# CREATOR: mike.lu@hp.com
+# CHANGE DATE: 2024/3/29
+__version__="1.1"
+
 
 PING_URL=google.com
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/30MB.zip
-FILE_NAME=30MB.zip
-FILE_SIZE=31457280
+FILE_URL=http://ipv4.download.thinkbroadband.com/30MB.zip   
+FILE_NAME=30MB.zip   
+FILE_SIZE=31457280   # 20971520 (for 20MB)
 CYCLE=~/count
 
 
@@ -62,10 +63,14 @@ Clean() {
 ####################################################################################
 
 
+# Kill the previous instances of the script before running the same script
+kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
+
+
 # Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
-[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: PASS" >> $TEST_LOG || echo "Dmesg check: FAIL" >> $TEST_LOG
-[[ `mmcli -m any` ]] && echo "ModemManager check: PASS" >> $TEST_LOG || echo "ModemManager check: FAIL" >> $TEST_LOG
-[[ `ip a | grep 'wwan0'` ]] && echo "IP check: PASS" >> $TEST_LOG || echo "IP check: FAIL" >> $TEST_LOG
+[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo "Dmesg check: [!!! FAILED !!!]" >> $TEST_LOG
+[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo "ModemManager check: [!!! FAILED !!!]" >> $TEST_LOG
+[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo "IP command check: [!!! FAILED !!!]" >> $TEST_LOG
 
 
 # Get WWAN operational state and IP (Using ip command)
