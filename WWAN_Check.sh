@@ -6,6 +6,11 @@
 __version__="1.1"
 
 
+# How To Use
+# 1) Put this script to Desktop
+# 2) Run `bash WWAN_Check.sh` 
+
+
 PING_URL=google.com
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
@@ -15,6 +20,11 @@ FILE_NAME=20MB.zip
 FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
 red='\033[0;31m'
+
+
+# Restrict user account
+[[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
+
 
 # Create cron job to run script  (start time: 02:40)
 RunScript() {
