@@ -66,6 +66,7 @@ Clean() {
     crontab -r 2> /dev/null
     sudo crontab -r 2> /dev/null
     systemctl restart cron
+	rm -f ~/$FILE_NAME 2> /dev/null
     # nmcli networking on
 }
 
