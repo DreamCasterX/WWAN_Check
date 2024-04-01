@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/3/29
+# CHANGE DATE: 2024/4/1
 __version__="1.1"
 
 
@@ -10,11 +10,11 @@ PING_URL=google.com
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/30MB.zip   
-FILE_NAME=30MB.zip   
-FILE_SIZE=31457280   # 20971520 (for 20MB)
+FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip   
+FILE_NAME=20MB.zip   
+FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
-
+red='\033[0;31m'
 
 # Create cron job to run script  (start time: 02:40)
 RunScript() {
@@ -68,9 +68,9 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 
 # Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
-[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo "Dmesg check: [!!! FAILED !!!]" >> $TEST_LOG
-[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo "ModemManager check: [!!! FAILED !!!]" >> $TEST_LOG
-[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo "IP command check: [!!! FAILED !!!]" >> $TEST_LOG
+[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo "Dmesg check: ${red}[FAILED]" >> $TEST_LOG
+[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo "ModemManager check: ${red}[FAILED]" >> $TEST_LOG
+[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo "IP command check: ${red}[FAILED]" >> $TEST_LOG
 
 
 # Get WWAN operational state and IP (Using ip command)
@@ -89,7 +89,7 @@ ping $PING_URL -c 10 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
     echo "Ping URL: [PASSED]" >> $TEST_LOG 
 else
-    echo "Ping URL: [!!! FAILED !!!]" >> $TEST_LOG 
+    echo "Ping URL: ${red}[FAILED]" >> $TEST_LOG 
 fi
 
 
@@ -99,10 +99,11 @@ gnome-terminal -- firefox $PING_URL && sleep 5
 if [[ $? == 0 ]]; then
     echo "Open browser: [PASSED]" >> $TEST_LOG
 else
-    echo "Open browser: [!!! FAILED !!!]" >> $TEST_LOG
+    echo "Open browser: ${red}[FAILED]" >> $TEST_LOG
 fi
 killall firefox
 COMMENT
+
 
 # Download file test
 rm -f ~/$FILE_NAME
@@ -110,7 +111,7 @@ wget $FILE_URL -P ~/
 if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
     echo "Download file: [PASSED]" >> $TEST_LOG
 else
-    echo "Download file: [!!! FAILED !!!]" >> $TEST_LOG
+    echo "Download file: ${red}[FAILED]" >> $TEST_LOG
 fi
 rm -f ~/$FILE_NAME
 
