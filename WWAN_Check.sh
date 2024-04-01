@@ -60,16 +60,22 @@ Clean() {
 }
 
 
-####################################################################################
-
-
 # Kill the previous instances of the script before running the same script
 kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 
+########################################################################################
+
+
 # Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
 [[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo -e "Dmesg check: ${red}[FAILED]" >> $TEST_LOG
+
+
+# Check the presence of WWAN in Modem Mnagaer
 [[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager check: ${red}[FAILED]" >> $TEST_LOG
+
+
+# Check the presence of WWAN in IP command
 [[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo -e "IP command check: ${red}[FAILED]" >> $TEST_LOG
 
 
@@ -78,7 +84,7 @@ echo "HW state: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
 # echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG
 
 
-# Get WWAN status and IP (Using nmcli command)
+# Get WWAN AP status and IP (Using nmcli command)
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
 echo "AP: ${AP_STATE^}" >> $TEST_LOG
 echo "IP: $(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)" >>  $TEST_LOG
@@ -93,18 +99,6 @@ else
 fi
 
 
-# Open browser test
-<<COMMENT
-gnome-terminal -- firefox $PING_URL && sleep 5
-if [[ $? == 0 ]]; then
-    echo "Open browser: [PASSED]" >> $TEST_LOG
-else
-    echo -e "Open browser: ${red}[FAILED]" >> $TEST_LOG
-fi
-killall firefox
-COMMENT
-
-
 # Download file test
 rm -f ~/$FILE_NAME
 wget $FILE_URL -P ~/
@@ -113,7 +107,7 @@ if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
 else
     echo -e "Download file: ${red}[FAILED]" >> $TEST_LOG
 fi
-rm -f ~/$FILE_NAME
+rm -f ~/$FILE_NAME 2> /dev/null
 
 
 # Output cycle and completion time to log
