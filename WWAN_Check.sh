@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/4/1
+# CHANGE DATE: 2024/4/2
 __version__="1.0"
 
 
@@ -19,8 +19,8 @@ FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip
 FILE_NAME=20MB.zip   
 FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
-red='\033[0;31m'
-nc='\033[0m'
+red='\033[38;2;255;0;0m'
+nc='\033[m'
 
 
 # Restrict user account
