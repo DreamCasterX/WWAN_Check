@@ -19,8 +19,8 @@ FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip
 FILE_NAME=20MB.zip   
 FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
-red='\033[38;2;255;0;0m'
-nc='\033[m'
+red='\e[41m'
+nc='\e[0m'
 
 
 # Restrict user account
