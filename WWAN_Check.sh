@@ -20,6 +20,7 @@ FILE_NAME=20MB.zip
 FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
 red='\033[0;31m'
+nc='\033[0m'
 
 
 # Restrict user account
@@ -79,15 +80,15 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 
 # Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
-[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo -e "Dmesg check: ${red}[FAILED]" >> $TEST_LOG
+[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo -e "Dmesg check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
 # Check the presence of WWAN in Modem Mnagaer
-[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager check: ${red}[FAILED]" >> $TEST_LOG
+[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
 # Check the presence of WWAN in IP command
-[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo -e "IP command check: ${red}[FAILED]" >> $TEST_LOG
+[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo -e "IP command check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
 # Get WWAN operational state and IP (Using ip command)
@@ -106,7 +107,7 @@ ping $PING_URL -c 10 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
     echo "Ping URL: [PASSED]" >> $TEST_LOG 
 else
-    echo -e "Ping URL: ${red}[FAILED]" >> $TEST_LOG 
+    echo -e "Ping URL: ${red}[FAILED]${nc}" >> $TEST_LOG 
 fi
 
 
@@ -116,7 +117,7 @@ wget $FILE_URL -P ~/
 if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
     echo "Download file: [PASSED]" >> $TEST_LOG
 else
-    echo -e "Download file: ${red}[FAILED]" >> $TEST_LOG
+    echo -e "Download file: ${red}[FAILED]${nc}" >> $TEST_LOG
 fi
 rm -f ~/$FILE_NAME 2> /dev/null
 
