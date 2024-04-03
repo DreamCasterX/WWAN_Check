@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/4/2
+# CHANGE DATE: 2024/4/3
 __version__="1.0"
 
 
@@ -17,7 +17,7 @@ TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 FILE_URL=http://ipv4.download.thinkbroadband.com/20MB.zip   
 FILE_NAME=20MB.zip   
-FILE_SIZE=20971520   # 20971520 (for 20MB)    31457280(for 30MB)
+FILE_SIZE=20971520   # 10485760 (for 10MB)    20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
 red='\e[41m'
 nc='\e[0m'
@@ -30,14 +30,14 @@ nc='\e[0m'
 # Create cron job to run script  (start time: 02:40)
 RunScript() {
     echo "*/2 * * * * sleep 40 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
-    crontab mycron
+    crontab mycron && rm -f mycron
 }
 
 
 # Create cron job to run script after reboot (start time: reboot + 30 sec)
 RunScriptAfterReboot() {
     echo "@reboot sleep 30 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
-    crontab mycron
+    crontab mycron && rm -f mycron
 }
 
 
@@ -47,7 +47,7 @@ RunS3() {
     grep -h "systemctl suspend" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
         echo "*/2 * * * * sudo systemctl suspend && sudo rtcwake -m no -s 30" >> mycron 
-        sudo crontab mycron
+        sudo crontab mycron && sudo rm -f mycron
     fi
 }
 
@@ -57,7 +57,7 @@ RunReboot() {
     grep -h "shutdown -r" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
         echo "*/2 * * * * sudo shutdown -r now" >> mycron
-        sudo crontab mycron
+        sudo crontab mycron && sudo rm -f mycron
     fi
 }
 
@@ -67,7 +67,7 @@ Clean() {
     crontab -r 2> /dev/null
     sudo crontab -r 2> /dev/null
     systemctl restart cron
-	rm -f ~/$FILE_NAME 2> /dev/null
+    rm -f ~/$FILE_NAME 2> /dev/null
     # nmcli networking on
 }
 
@@ -93,7 +93,6 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 # Get WWAN operational state and IP (Using ip command)
 echo "HW state: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
-# echo "IP: $(ip a | grep wwan0 -A 1| grep inet | cut -d " " -f6 | cut -d "/" -f1)" >>  $TEST_LOG
 
 
 # Get WWAN AP status and IP (Using nmcli command)
@@ -151,6 +150,5 @@ if [[ $? != 0 ]]; then
           read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
         done
 fi
-rm -f mycron
 
 
