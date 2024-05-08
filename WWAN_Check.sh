@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/4/3
+# CHANGE DATE: 2024/5/8
 __version__="1.0"
 
 
@@ -79,8 +79,14 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 ########################################################################################
 
 
-# Check if Fibocom WWAN driver (mtk_t7xx) loaded porperly - Added on 2024/01/17
-[[ ! `sudo dmesg | grep mtk_t7xx | grep "Invalid device status 0x1"` ]] && echo "Dmesg check: [PASSED]" >> $TEST_LOG || echo -e "Dmesg check: ${red}[FAILED]${nc}" >> $TEST_LOG
+# Check if WWAN driver loaded porperly - Updated on 2024/05/08
+wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`
+sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1" 
+if [[ $? = 0 ]]; then
+	echo -e "Dmesg check: ${red}[FAILED]${nc}" >> $TEST_LOG 
+else
+    echo echo "Dmesg check: [PASSED]" >> $TEST_LOG
+fi
 
 
 # Check the presence of WWAN in Modem Mnagaer
@@ -89,10 +95,6 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 # Check the presence of WWAN in IP command
 [[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo -e "IP command check: ${red}[FAILED]${nc}" >> $TEST_LOG
-
-
-# Get WWAN operational state and IP (Using ip command)
-echo "HW state: $(ip a | grep wwan0: | cut -d " " -f9)" >> $TEST_LOG
 
 
 # Get WWAN AP status and IP (Using nmcli command)
