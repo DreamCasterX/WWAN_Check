@@ -85,7 +85,7 @@ sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1"
 if [[ $? = 0 ]]; then
 	echo -e "Dmesg check: ${red}[FAILED]${nc}" >> $TEST_LOG 
 else
-    echo echo "Dmesg check: [PASSED]" >> $TEST_LOG
+    echo -e "Dmesg check: [PASSED]" >> $TEST_LOG
 fi
 
 
