@@ -2,13 +2,15 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/5/8
+# CHANGE DATE: 2024/7/4
 __version__="1.0"
 
 
 # How To Use
 # 1) Put this script to Desktop
 # 2) Run `bash WWAN_Check.sh` 
+# 3) Check if the output of cycle #0 in Result.log is valid.
+# 4) To stop the trace, select 'Clean' from the options
 
 
 PING_URL=google.com
@@ -68,7 +70,7 @@ Clean() {
     sudo crontab -r 2> /dev/null
     systemctl restart cron
     rm -f ~/$FILE_NAME 2> /dev/null
-    sudo rm -f mycron
+    sudo rm -f mycron ~/mycron
     # nmcli networking on
 }
 
@@ -80,36 +82,42 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 ########################################################################################
 
 
-# Check if WWAN driver loaded porperly - Updated on 2024/05/08
+# Check if WWAN driver loaded properly in dmesg
 wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`
 sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1" 
 if [[ $? = 0 ]]; then
-	echo -e "Dmesg check: ${red}[FAILED]${nc}" >> $TEST_LOG 
+	echo -e "Dmesg Check: ${red}[FAILED]${nc}" >> $TEST_LOG 
 else
-    echo -e "Dmesg check: [PASSED]" >> $TEST_LOG
+    echo -e "Dmesg Check: [PASSED]" >> $TEST_LOG
 fi
 
 
-# Check the presence of WWAN in Modem Mnagaer
-[[ `mmcli -m any` ]] && echo "ModemManager check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager check: ${red}[FAILED]${nc}" >> $TEST_LOG
-
-
 # Check the presence of WWAN in IP command
-[[ `ip a | grep 'wwan0'` ]] && echo "IP command check: [PASSED]" >> $TEST_LOG || echo -e "IP command check: ${red}[FAILED]${nc}" >> $TEST_LOG
+[[ `ip a | grep 'wwan0'` ]] && echo "IP Check: [PASSED]" >> $TEST_LOG || echo -e "IP Check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
-# Get WWAN AP status and IP (Using nmcli command)
+# Check the presence of WWAN in Modem Manager
+[[ `mmcli -m any` ]] && echo "ModemManager Check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager Check: ${red}[FAILED]${nc}" >> $TEST_LOG
+
+
+# Get connectivity state and IP address in Network Manager (Fail condition =>  AP state: disconnected    IP: null)
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
-echo "AP: ${AP_STATE^}" >> $TEST_LOG
-echo "IP: $(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)" >>  $TEST_LOG
+IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
+[[ $AP_STATE == "disconnected" ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
+[[ -z "$IP" ]] && echo -e "IP: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP: " >>  $TEST_LOG
+
+
+# Get signal qulity from Modem Manager
+SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F ' ' '{print $1}'` 
+[[ $SIGNAL == "0%" ]] && echo -e "Signal Quality: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Quality: $SIGNAL" >> $TEST_LOG
 
 
 # Ping URL test
 ping $PING_URL -c 10 | grep -w "0% packet loss" 
 if [[ $? = 0 ]]; then
-    echo "Ping URL: [PASSED]" >> $TEST_LOG 
+    echo "Ping Test: [PASSED]" >> $TEST_LOG 
 else
-    echo -e "Ping URL: ${red}[FAILED]${nc}" >> $TEST_LOG 
+    echo -e "Ping Test: ${red}[FAILED]${nc}" >> $TEST_LOG 
 fi
 
 
@@ -117,9 +125,9 @@ fi
 rm -f ~/$FILE_NAME
 wget $FILE_URL -P ~/
 if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
-    echo "Download file: [PASSED]" >> $TEST_LOG
+    echo "Download Test: [PASSED]" >> $TEST_LOG
 else
-    echo -e "Download file: ${red}[FAILED]${nc}" >> $TEST_LOG
+    echo -e "Download Test: ${red}[FAILED]${nc}" >> $TEST_LOG
 fi
 rm -f ~/$FILE_NAME 2> /dev/null
 
