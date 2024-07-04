@@ -109,7 +109,7 @@ IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d 
 
 # Get signal qulity from Modem Manager (Fail condition => 0%/null)
 SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F ' ' '{print $1}'` 
-[[ -z $SIGNAL || $SIGNAL == "0%" ]] && echo -e "Signal Quality: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Quality: $SIGNAL" >> $TEST_LOG
+[[ -z $SIGNAL || $SIGNAL == "0%" ]] && echo -e "Signal Strength: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Strength: $SIGNAL" >> $TEST_LOG
 
 
 # Ping URL test
