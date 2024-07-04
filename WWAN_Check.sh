@@ -9,7 +9,7 @@ __version__="1.0"
 # How To Use
 # 1) Put this script to Desktop
 # 2) Run `bash WWAN_Check.sh` 
-# 3) Check if the output of cycle #0 in Result.log is valid.
+# 3) Run `cat Result.log` to check if the output of cycle #0 is good
 # 4) To stop the trace, select 'Clean' from the options
 
 
