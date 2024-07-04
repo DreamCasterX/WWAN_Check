@@ -3,7 +3,7 @@
 
 # CREATOR: mike.lu@hp.com
 # CHANGE DATE: 2024/7/4
-__version__="1.0"
+__version__="1.1"
 
 
 # How To Use
@@ -100,16 +100,16 @@ fi
 [[ `mmcli -m any` ]] && echo "ModemManager Check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager Check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
-# Get connectivity state and IP address in Network Manager (Fail condition =>  AP state: disconnected    IP: null)
+# Check cellular network connection and IP address in Network Manager (Fail condition =>  AP state: disconnected/unavailable    IP: null)
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
 IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
-[[ $AP_STATE == "disconnected" ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
+[[ $AP_STATE =~ ^(disconnected|unavailable)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
 [[ -z "$IP" ]] && echo -e "IP: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP: " >>  $TEST_LOG
 
 
-# Get signal qulity from Modem Manager
+# Get signal qulity from Modem Manager (Fail condition => 0%/null)
 SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F ' ' '{print $1}'` 
-[[ $SIGNAL == "0%" ]] && echo -e "Signal Quality: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Quality: $SIGNAL" >> $TEST_LOG
+[[ -z $SIGNAL || $SIGNAL == "0%" ]] && echo -e "Signal Quality: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Quality: $SIGNAL" >> $TEST_LOG
 
 
 # Ping URL test
