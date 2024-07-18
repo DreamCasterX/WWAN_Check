@@ -2,8 +2,8 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/7/4
-__version__="1.1"
+# CHANGE DATE: 2024/7/18
+__version__="1.2"
 
 
 # How To Use
@@ -104,7 +104,7 @@ fi
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
 IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
 [[ $AP_STATE =~ ^(disconnected|unavailable)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
-[[ -z "$IP" ]] && echo -e "IP: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP: " >>  $TEST_LOG
+[[ -z "$IP" ]] && echo -e "IP: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP: $IP" >>  $TEST_LOG
 
 
 # Get signal qulity from Modem Manager (Fail condition => 0%/null)
