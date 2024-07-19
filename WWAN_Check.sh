@@ -23,6 +23,8 @@ FILE_NAME=10MB.zip
 FILE_SIZE=10485760   # 10485760 (for 10MB)    20971520 (for 20MB)    31457280(for 30MB)
 CYCLE=~/count
 red='\e[41m'
+yellow='\e[44m'
+cyan='\e[36m'
 nc='\e[0m'
 
 
@@ -169,11 +171,11 @@ rm -f ~/$FILE_NAME 2> /dev/null
 [ ! -f $CYCLE ] && echo -1 > $CYCLE
 sed -i "s/$(cat $CYCLE)\$/`expr $(cat $CYCLE) + 1`/g" $CYCLE
 fail_count=`grep 'FAILED' $TEST_LOG | wc -l`
-fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u`
+fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | tr "\n" "| " | xargs printf "%s "`
 echo "" >> $TEST_LOG
 echo "===============  Test cycle #$(cat $CYCLE) done on $NOW  ===============" >> $TEST_LOG
-echo "*SUMMARY*  Total failure count:$fail_count   Failed cases:$fail_case" >> $TEST_LOG
-echo "========================================================================" >> $TEST_LOG
+echo -e "${yellow}*SUMMARY*   Failure count:$fail_count         Failed case:$fail_case${nc}" >> $TEST_LOG
+echo "==============================================================================" >> $TEST_LOG
 echo "" >> $TEST_LOG
 
 
