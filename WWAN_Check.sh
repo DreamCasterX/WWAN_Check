@@ -17,9 +17,9 @@ __version__="1.3"
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/10MB.zip   
-FILE_NAME=10MB.zip   
-FILE_SIZE=10485760   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
+FILE_URL=http://ipv4.download.thinkbroadband.com/5MB.zip   
+FILE_NAME=5MB.zip   
+FILE_SIZE=5242880   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
@@ -180,14 +180,12 @@ rm -f ~/$FILE_NAME 2> /dev/null
 # Output cycle and completion time to log
 [ ! -f $CYCLE ] && echo -1 > $CYCLE
 sed -i "s/$(cat $CYCLE)\$/`expr $(cat $CYCLE) + 1`/g" $CYCLE
+echo -e "\n===============  Test cycle ${purple}#$(cat $CYCLE)${nc} done on $NOW  ===============" >> $TEST_LOG
 fail_count=`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | wc -l`
 [[ $fail_count != 0 ]] && fail_cycle="(`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | cut -d ' ' -f2 | awk 'BEGIN{ORS=", "}'1`)"
 [[ $fail_count != 0 ]] && fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | awk 'BEGIN{ORS=" / "}'1` || fail_case='n/a'
-echo "" >> $TEST_LOG
-echo -e "===============  Test cycle ${purple}#$(cat $CYCLE)${nc} done on $NOW  ===============" >> $TEST_LOG
 echo -e "${blue}*SUMMARY*   Fail count: $fail_count   $fail_cycle       Fail case: $fail_case${nc}" >> $TEST_LOG
-echo "==============================================================================" >> $TEST_LOG
-echo "" >> $TEST_LOG
+echo -e "==============================================================================\n" >> $TEST_LOG
 
 
 # Run test based on user input
