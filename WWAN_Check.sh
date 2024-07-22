@@ -58,7 +58,7 @@ UpdateScript() {
 	fi
 }
 
-UpdateScript 
+nslookup google.com > /dev/null && UpdateScript 
 
 ######################################### [Configuration] ###################################################
 
