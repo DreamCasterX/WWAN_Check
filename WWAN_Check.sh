@@ -2,29 +2,28 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/7/19
+# CHANGE DATE: 2024/7/22
 __version__="1.3"
 
 
 # How To Use
 # 1) Put this script to $HOME/Desktop
-# 2) Run `bash WWAN_Check.sh` 
+# 2) Run `./WWAN_Check.sh` 
 # 3) Run `cat Result.log` to check if the initial result of cycle #0 is good
 # 4) Select suspend or reboot stress test to run
 # 5) To stop the trace, turn off WWAN and select 'Clean' from the options
 
 
-PING_URL=google.com
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 FILE_URL=http://ipv4.download.thinkbroadband.com/10MB.zip   
 FILE_NAME=10MB.zip   
-FILE_SIZE=10485760   # 10485760 (for 10MB)    20971520 (for 20MB)    31457280(for 30MB)
+FILE_SIZE=10485760   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
 CYCLE=~/count
 red='\e[41m'
-yellow='\e[44m'
-cyan='\e[36m'
+blue='\e[44m'
+purple='\e[35m'
 nc='\e[0m'
 
 
@@ -32,10 +31,8 @@ nc='\e[0m'
 [[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
 
 
-# CHECK THE LATEST VERSION
+# Update to the latest version
 UpdateScript() {
-	# wget -q --spider www.google.com > /dev/null
-	# [[ $? != 0 ]] && echo -e "❌ No Internet connection! Check your network and retry.\n" && exit || :
 	[[ ! -f /usr/bin/curl ]] && sudo apt update && sudo apt install curl -y 
 	release_url=https://api.github.com/repos/DreamCasterX/WWAN_Check/releases/latest
 	new_version=$(curl -s "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
@@ -56,12 +53,12 @@ UpdateScript() {
 			sudo chmod 755 WWAN_Check.sh
 			echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n" ; exit 1
 	    	else
-			echo -e "\n❌ Error occured while downloading" ; exit 1
+			echo -e "\n❌ Error occured while downloading"
 	    	fi 
 	fi
 }
 
-UpdateScript
+UpdateScript 
 
 ######################################### [Configuration] ###################################################
 
@@ -117,7 +114,8 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 ######################################### [Test Case Execution] ###################################################
 
-# Check if WWAN driver is loaded properly in dmesg
+# Case 1 - check if WWAN driver is loaded properly in dmesg
+echo "Running case #1 - check dmesg"
 wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`
 sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1" 
 if [[ $? = 0 ]]; then
@@ -127,28 +125,37 @@ else
 fi
 
 
-# Check the presence of WWAN in IP command
+# Case 2 - check the presence of WWAN in IP command
+echo "Running case #2 - check IP command"
 [[ `ip a | grep 'wwan0'` ]] && echo "IP Check: [PASSED]" >> $TEST_LOG || echo -e "IP Check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
-# Check the presence of WWAN in Modem Manager
+# Case 3 - check the presence of WWAN in Modem Manager
+echo "Running case #3 - check modem manager"
 [[ `mmcli -m any` ]] && echo "ModemManager Check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager Check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
-# Check cellular network connection and IP address in Network Manager (Fail condition =>  AP state: disconnected/unavailable    IP: null)
+# Case 4 - check cellular network connection state in Network Manager (Fail condition =>  disconnected/unavailable)
+echo "Running case #4 - check connection state"
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
-IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
 [[ $AP_STATE =~ ^(disconnected|unavailable)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
-[[ -z "$IP" ]] && echo -e "IP: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP: $IP" >>  $TEST_LOG
 
 
-# Get signal quality from Modem Manager (Fail condition => 0%/null)
+# Case 5 - check IP address in Network Manager (Fail condition =>  null)
+echo "Running case #5 - get IP address"
+IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
+[[ -z "$IP" ]] && echo -e "IP Addr: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP Addr: $IP" >>  $TEST_LOG
+
+
+# Case 6 - get signal quality from Modem Manager (Fail condition => 0%/null)
+echo "Running case #6 - get signal quality"
 SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F ' ' '{print $1}'` 
 [[ -z $SIGNAL || $SIGNAL == "0%" ]] && echo -e "Signal Strength: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Strength: $SIGNAL" >> $TEST_LOG
 
 
-# Ping URL test
-ping $PING_URL -c 10 | grep -w "0% packet loss" 
+# Case 7 - ping test
+echo "Running case #7 - ping test"
+ping $PING_IP -c 10 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
     echo "Ping Test: [PASSED]" >> $TEST_LOG 
 else
@@ -156,7 +163,8 @@ else
 fi
 
 
-# Download file test
+# Case 8 - download file test
+echo -e "\nRunning case #8 - download file"
 rm -f ~/$FILE_NAME
 wget $FILE_URL -P ~/
 if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
@@ -167,19 +175,22 @@ fi
 rm -f ~/$FILE_NAME 2> /dev/null
 
 
+######################################### [Test log collection] ###################################################
+
 # Output cycle and completion time to log
 [ ! -f $CYCLE ] && echo -1 > $CYCLE
 sed -i "s/$(cat $CYCLE)\$/`expr $(cat $CYCLE) + 1`/g" $CYCLE
-fail_count=`grep 'FAILED' $TEST_LOG | wc -l`
-fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | tr "\n" "| " | xargs printf "%s "`
+fail_count=`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | wc -l`
+[[ $fail_count != 0 ]] && fail_cycle="(`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | cut -d ' ' -f2 | awk 'BEGIN{ORS=", "}'1`)"
+[[ $fail_count != 0 ]] && fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | awk 'BEGIN{ORS=" / "}'1` || fail_case='n/a'
 echo "" >> $TEST_LOG
-echo "===============  Test cycle #$(cat $CYCLE) done on $NOW  ===============" >> $TEST_LOG
-echo -e "${yellow}*SUMMARY*   Failure count:$fail_count         Failed case:$fail_case${nc}" >> $TEST_LOG
+echo -e "===============  Test cycle ${purple}#$(cat $CYCLE)${nc} done on $NOW  ===============" >> $TEST_LOG
+echo -e "${blue}*SUMMARY*   Fail count: $fail_count   $fail_cycle       Fail case: $fail_case${nc}" >> $TEST_LOG
 echo "==============================================================================" >> $TEST_LOG
 echo "" >> $TEST_LOG
 
 
-# Set cron job
+# Run test based on user input
 sudo crontab -l > mycron 2> /dev/null
 grep -h "WWAN_Check.sh" mycron 2> /dev/null
 if [[ $? != 0 ]]; then
