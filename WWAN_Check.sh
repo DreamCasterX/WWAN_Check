@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/7/22
+# CHANGE DATE: 2024/7/23
 __version__="1.3"
 
 
@@ -17,9 +17,9 @@ __version__="1.3"
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/5MB.zip   
-FILE_NAME=5MB.zip   
-FILE_SIZE=5242880   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
+FILE_URL=http://ipv4.download.thinkbroadband.com/10MB.zip   
+FILE_NAME=10MB.zip   
+FILE_SIZE=10485760   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
@@ -116,7 +116,7 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 
 # Case 1 - check if WWAN driver is loaded properly in dmesg
 echo "Running case #1 - check dmesg"
-wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`
+wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`  # WWAN => grep 'wireless'   WLAN => grep 'network'      
 sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1" 
 if [[ $? = 0 ]]; then
 	echo -e "Dmesg Check: ${red}[FAILED]${nc}" >> $TEST_LOG 
@@ -141,7 +141,7 @@ AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | 
 [[ $AP_STATE =~ ^(disconnected|unavailable)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
 
 
-# Case 5 - check IP address in Network Manager (Fail condition =>  null)
+# Case 5 - check IP address in Network Manager (Fail condition => null)
 echo "Running case #5 - get IP address"
 IP=$(nmcli device show wwan0mbim0 | grep IP4.ADDRESS | cut -d " " -f26 | cut -d "/" -f1)
 [[ -z "$IP" ]] && echo -e "IP Addr: ${red}[FAILED]${nc}" >>  $TEST_LOG || echo "IP Addr: $IP" >>  $TEST_LOG
@@ -153,7 +153,7 @@ SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F 
 [[ -z $SIGNAL || $SIGNAL == "0%" ]] && echo -e "Signal Strength: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "Signal Strength: $SIGNAL" >> $TEST_LOG
 
 
-# Case 7 - ping test
+# Case 7 - ping test (Fail condition => any packet loss)
 echo "Running case #7 - ping test"
 ping $PING_IP -c 10 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
@@ -177,14 +177,14 @@ rm -f ~/$FILE_NAME 2> /dev/null
 
 ######################################### [Test log collection] ###################################################
 
-# Output cycle and completion time to log
+# Output the current cycle, completion time and test summary to Result.log
 [ ! -f $CYCLE ] && echo -1 > $CYCLE
 sed -i "s/$(cat $CYCLE)\$/`expr $(cat $CYCLE) + 1`/g" $CYCLE
-echo -e "\n===============  Test cycle ${purple}#$(cat $CYCLE)${nc} done on $NOW  ===============" >> $TEST_LOG
+echo -e "\n===============  Test cycle #$(cat $CYCLE) done on $NOW  ===============" >> $TEST_LOG
 fail_count=`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | wc -l`
-[[ $fail_count != 0 ]] && fail_cycle="(`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | cut -d ' ' -f2 | awk 'BEGIN{ORS=", "}'1`)"
-[[ $fail_count != 0 ]] && fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | awk 'BEGIN{ORS=" / "}'1` || fail_case='n/a'
-echo -e "${blue}*SUMMARY*   Fail count: $fail_count   $fail_cycle       Fail case: $fail_case${nc}" >> $TEST_LOG
+[[ $fail_count != 0 ]] && fail_cycle="(`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | cut -d ' ' -f2 | awk 'BEGIN{ORS=", "}'1 | sed 's/, $//g'`)"
+[[ $fail_count != 0 ]] && fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | awk 'BEGIN{ORS=" / "}'1 | sed 's/\/ $//g'` || fail_case='n/a'
+echo -e "${blue}*SUMMARY*   Fail count: $fail_count  $fail_cycle       Failed case: $fail_case${nc}" >> $TEST_LOG
 echo -e "==============================================================================\n" >> $TEST_LOG
 
 
