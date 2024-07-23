@@ -184,7 +184,7 @@ echo -e "\n===============  Test cycle #$(cat $CYCLE) done on $NOW  ============
 fail_count=`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | wc -l`
 [[ $fail_count != 0 ]] && fail_cycle="(`grep 'FAILED' $TEST_LOG -A9 | awk -F 'cycle' '{print $2}'| sed -n '/./p' | cut -d ' ' -f2 | awk 'BEGIN{ORS=", "}'1 | sed 's/, $//g'`)"
 [[ $fail_count != 0 ]] && fail_case=`grep 'FAILED' $TEST_LOG | awk -F ':' '{print $1}' | sort -u | awk 'BEGIN{ORS=" / "}'1 | sed 's/\/ $//g'` || fail_case='n/a'
-echo -e "${blue}*SUMMARY*   Total failures: $fail_count  $fail_cycle       Failed cases: $fail_case${nc}" >> $TEST_LOG
+echo -e "${blue}*SUMMARY*   Total failures: $fail_count $fail_cycle       Failed cases: $fail_case${nc}" >> $TEST_LOG
 echo -e "==============================================================================\n" >> $TEST_LOG
 
 
