@@ -8,10 +8,10 @@ __version__="1.3"
 
 # How To Use
 # 1) Put this script to $HOME/Desktop
-# 2) Run `./WWAN_Check.sh` 
+# 2) cd to $HOME/Desktop and run `./WWAN_Check.sh` 
 # 3) Run `cat Result.log` to check if the initial result of cycle #0 is good
-# 4) Select suspend or reboot stress test to run
-# 5) To stop the trace, turn off WWAN and select 'Clean' from the options
+# 4) Select suspend or reboot stress test to continue
+# 5) To stop the trace, disconnect network and select 'Clean' from the options
 
 
 PING_IP=8.8.8.8
