@@ -23,7 +23,6 @@ FILE_SIZE=10485760   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
-purple='\e[35m'
 nc='\e[0m'
 
 
