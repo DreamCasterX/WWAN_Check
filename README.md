@@ -2,7 +2,6 @@
 
 
 ### How To Use
-+ Put this script to $HOME/Desktop
 + Run `./WWAN_Check.sh` 
 + Run `cat Result.log` to check if the initial result of cycle #0 is good
 + Select suspend or reboot stress test to run
