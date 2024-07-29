@@ -2,13 +2,12 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/7/23
+# CHANGE DATE: 2024/7/29
 __version__="1.3"
 
 
 # How To Use
-# 1) Put this script to $HOME/Desktop
-# 2) cd to $HOME/Desktop and run `./WWAN_Check.sh` 
+# 1) Run `./WWAN_Check.sh` 
 # 3) Run `cat Result.log` to check if the initial result of cycle #0 is good
 # 4) Select suspend or reboot stress test to continue
 # 5) To stop the trace, disconnect network and select 'Clean' from the options
@@ -17,9 +16,9 @@ __version__="1.3"
 PING_IP=8.8.8.8
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/10MB.zip   
-FILE_NAME=10MB.zip   
-FILE_SIZE=10485760   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)
+FILE_URL=http://ipv4.download.thinkbroadband.com/5MB.zip   
+FILE_NAME=5MB.zip   
+FILE_SIZE=5242880   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)    31457280 (for 30MB)
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
@@ -28,6 +27,22 @@ nc='\e[0m'
 
 # Restrict user account
 [[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
+
+
+# Put the script to the assigned path
+script_path=$(realpath "${BASH_SOURCE[0]}")
+if [[ ! "$script_path" =~ "$HOME/Desktop" ]]; then
+	target_path="$HOME/Desktop/WWAN_Check.sh"
+	mv "$script_path" "$target_path"
+	if [[ $? == 0 ]]; then
+		echo "Script moved to $HOME/Desktop for execution"
+		script_path="$target_path"
+	else
+		echo "Failed to move script to $HOME/Desktop. Exiting..."
+		exit 1
+	fi
+fi
+cd $HOME/Desktop
 
 
 # Update to the latest version
@@ -61,21 +76,13 @@ nslookup google.com > /dev/null && UpdateScript
 
 ######################################### [Configuration] ###################################################
 
-# Create cron job to run script  (start time: 02:40)
+# Create cron job to run script  (start time: 02:40 => resume from S3 + 10 sec)
 RunScript() {
     echo "*/2 * * * * sleep 40 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
-
-# Create cron job to run script after reboot (start time: reboot + 30 sec)
-RunScriptAfterReboot() {
-    echo "@reboot sleep 30 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
-    crontab mycron && rm -f mycron
-}
-
-
-# Create cron job for S3 and resume (start time: 02:30)
+# Create cron job for S3 and resume (start time: 02:00   resume: 30 sec)
 RunS3() {
     sudo crontab -l > mycron 2> /dev/null
     grep -h "systemctl suspend" mycron 2> /dev/null
@@ -85,17 +92,23 @@ RunS3() {
     fi
 }
 
-# Create cron job for Reboot  (start time: 02:00)
+# Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
+RunScriptAfterReboot() {
+    echo "@reboot sleep 60 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    crontab mycron && rm -f mycron
+}
+
+# Create cron job for Reboot  (start time: 04:00)
 RunReboot() {
     sudo crontab -l > mycron 2> /dev/null
     grep -h "shutdown -r" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
-        echo "*/2 * * * * sudo shutdown -r now" >> mycron
+        echo "*/4 * * * * sudo shutdown -r now" >> mycron
         sudo crontab mycron && sudo rm -f mycron
     fi
 }
 
-# Delete cron job
+# Delete cron job and restore to default settings
 Clean() {
     rm -f $CYCLE
     crontab -r 2> /dev/null
@@ -154,7 +167,7 @@ SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F 
 
 # Case 7 - ping test (Fail condition => any packet loss)
 echo "Running case #7 - ping test"
-ping $PING_IP -c 10 | grep -w "0% packet loss"
+ping $PING_IP -c 6 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
     echo "Ping Test: [PASSED]" >> $TEST_LOG 
 else
