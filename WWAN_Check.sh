@@ -29,7 +29,7 @@ nc='\e[0m'
 [[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
 
 
-# Put the script to the assigned path
+# Move the script to the assigned path
 script_path=$(realpath "${BASH_SOURCE[0]}")
 if [[ ! "$script_path" =~ "$HOME/Desktop" ]]; then
 	target_path="$HOME/Desktop/WWAN_Check.sh"
