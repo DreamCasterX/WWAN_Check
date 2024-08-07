@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/7/29
+# CHANGE DATE: 2024/8/7
 __version__="1.4"
 
 
@@ -13,7 +13,7 @@ __version__="1.4"
 # 5) To stop the trace, disconnect network and select 'Clean' from the options
 
 
-PING_IP=8.8.8.8
+PING_IP=1.0.0.1
 TEST_LOG=$HOME/Desktop/Result.log
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 FILE_URL=http://ipv4.download.thinkbroadband.com/5MB.zip   
@@ -47,17 +47,16 @@ cd $HOME/Desktop
 
 # Update to the latest version
 UpdateScript() {
-	[[ ! -f /usr/bin/curl ]] && sudo apt update && sudo apt install curl -y 
 	release_url=https://api.github.com/repos/DreamCasterX/WWAN_Check/releases/latest
-	new_version=$(curl -s "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
-	release_note=$(curl -s "${release_url}" | grep '"body":' | awk -F\" '{print $4}')
+	new_version=$(wget -qO- "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
+	release_note=$(wget -qO- "${release_url}" | grep '"body":' | awk -F\" '{print $4}')
 	tarball_url="https://github.com/DreamCasterX/WWAN_Check/archive/refs/tags/${new_version}.tar.gz"
 	if [[ $new_version != $__version__ ]]; then
 		echo -e "⭐️ New version found!\n\nVersion: $new_version\nRelease note:\n$release_note"
 	  	sleep 2
 	  	echo -e "\nDownloading update..."
 	  	pushd "$PWD" > /dev/null 2>&1
-	  	curl --silent --insecure --fail --retry-connrefused --retry 3 --retry-delay 2 --location --output ".WWAN_Check.tar.gz" "${tarball_url}"
+	  	wget --quiet --no-check-certificate --tries=3 --waitretry=2 --output-document=".WWAN_Check.tar.gz" "${tarball_url}"
 	  	if [[ -e ".WWAN_Check.tar.gz" ]]; then
 			tar -xf .WWAN_Check.tar.gz -C "$PWD" --strip-components 1 > /dev/null 2>&1
 			rm -f .WWAN_Check.tar.gz
@@ -167,7 +166,7 @@ SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F 
 
 # Case 7 - ping test (Fail condition => any packet loss)
 echo "Running case #7 - ping test"
-ping $PING_IP -c 6 | grep -w "0% packet loss"
+ping $PING_IP -c 10 | grep -w "0% packet loss"
 if [[ $? = 0 ]]; then
     echo "Ping Test: [PASSED]" >> $TEST_LOG 
 else
