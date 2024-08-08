@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/7
+# CHANGE DATE: 2024/8/8
 __version__="1.4"
 
 
@@ -23,6 +23,8 @@ CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
 nc='\e[0m'
+__updated=false
+
 
 
 # Restrict user account
@@ -47,6 +49,7 @@ cd $HOME/Desktop
 
 # Update to the latest version
 UpdateScript() {
+	echo -e 'Checking updates...' 
 	release_url=https://api.github.com/repos/DreamCasterX/WWAN_Check/releases/latest
 	new_version=$(wget -qO- "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
 	release_note=$(wget -qO- "${release_url}" | grep '"body":' | awk -F\" '{print $4}')
@@ -64,15 +67,30 @@ UpdateScript() {
 			popd > /dev/null 2>&1
 			sleep 3
 			sudo chmod 755 WWAN_Check.sh
-			echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n" ; exit 1
+			echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n"
+			exit 1
 	    	else
 			echo -e "\n❌ Error occured while downloading"
-	    	fi 
+			exit 1
+	    	fi
+	else
+		echo -e '- Already the latest version\n'
+		__updated=true 
 	fi
 }
 
-nslookup google.com > /dev/null && UpdateScript 
 
+if [[ $__updated == false ]]; then
+	nslookup google.com > /dev/null
+	if [[ $? == 0 ]]; then 
+		UpdateScript
+	else
+		echo -e "❌ No Internet connection! Check your network and retry"
+		exit 1
+	fi
+fi
+	
+	 
 ######################################### [Configuration] ###################################################
 
 # Create cron job to run script  (start time: 02:40 => resume from S3 + 10 sec)
@@ -115,6 +133,7 @@ Clean() {
     systemctl restart cron
     rm -f ~/$FILE_NAME 2> /dev/null
     sudo rm -f mycron ~/mycron
+    __updated=false
     # nmcli networking on
 }
 
