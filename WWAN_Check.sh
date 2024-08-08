@@ -86,7 +86,6 @@ if [[ $__updated == false ]]; then
 		UpdateScript
 	else
 		echo -e "❌ No Internet connection! Check your network and retry"
-		exit 1
 	fi
 fi
 	
