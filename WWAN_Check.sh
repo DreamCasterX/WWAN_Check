@@ -16,7 +16,7 @@ __version__="1.4"
 # User defined settings
 PING_IP=8.8.8.8
 PING_CYCLE=10
-FILE_SIZE=5MB  # 5MB/10MB/20MB/30MB/100MB/1GB
+FILE_SIZE=5MB          # 5MB/10MB/20MB/30MB/100MB/1GB
 REBOOT_INTERVAL=4      # per minutes (enter reboot)
 REBOOT_RESUME_WAIT=60  # per seconds (start to run script after resume)
 SLEEP_INTERVAL=2       # per minutes (enter S3)
@@ -34,6 +34,7 @@ NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
+green='\e[32m'
 nc='\e[0m'
 __updated=false
 
@@ -51,7 +52,7 @@ if [[ ! "$script_path" =~ "$HOME/Desktop" ]]; then
 	echo "Script moved to $HOME/Desktop for execution"
 	script_path="$target_path"
     else
-        echo "Failed to move script to $HOME/Desktop. Exiting..."
+        echo "❌ Failed to move script to $HOME/Desktop. Exiting..."
         exit 1
     fi
 fi
@@ -78,14 +79,14 @@ UpdateScript() {
             popd > /dev/null 2>&1
             sleep 3
             sudo chmod 755 WWAN_Check.sh
-            echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n"
+            echo -e "${green}Successfully updated! Please run WWAN_Check.sh again.${nc}\n\n"
             exit 1
         else
-            echo -e "\n❌ Error occured while downloading"
+            echo -e "\n❌ Error occurred while downloading"
             exit 1
         fi
     else
-        echo -e '- Already the latest version!\n'
+        echo -e "${green}Already the latest version!${nc}\n"
         __updated=true 
     fi
 }
