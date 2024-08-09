@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/8
+# CHANGE DATE: 2024/8/9
 __version__="1.4"
 
 
@@ -13,18 +13,29 @@ __version__="1.4"
 # 5) To stop the trace, disconnect network and select 'Clean' from the options
 
 
-PING_IP=1.0.0.1
+# User defined settings
+PING_IP=8.8.8.8
+PING_CYCLE=10
+FILE_SIZE=5MB  # 5MB/10MB/20MB/30MB/100MB/1GB
+REBOOT_INTERVAL=4      # per minutes (enter reboot)
+REBOOT_RESUME_WAIT=60  # per seconds (start to run script after resume)
+SLEEP_INTERVAL=2       # per minutes (enter S3)
+SLEEP_RESUME=30        # per seconds (exit S3)
+SLEEP_RESUME_WAIT=10   # per seconds (start to run script after resume)
+
+
+# Fixed settings
 TEST_LOG=$HOME/Desktop/Result.log
+FILE_URL=http://ipv4.download.thinkbroadband.com/$FILE_SIZE.zip 
+[[ $FILE_SIZE == 5MB ]] && FILE_BYTE=5242880 ; [[ $FILE_SIZE == 10MB ]] && FILE_BYTE=10485760
+[[ $FILE_SIZE == 20MB ]] && FILE_BYTE=20971520 ; [[ $FILE_SIZE == 30MB ]] && FILE_BYTE=31457280
+[[ $FILE_SIZE == 100MB ]] && FILE_BYTE=104857600 ; [[ $FILE_SIZE == 1GB ]] && FILE_BYTE=1073725334
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-FILE_URL=http://ipv4.download.thinkbroadband.com/5MB.zip   
-FILE_NAME=5MB.zip   
-FILE_SIZE=5242880   # 5242880 (for 5MB)    10485760 (for 10MB)    20971520 (for 20MB)    31457280 (for 30MB)
 CYCLE=~/count
 red='\e[41m'
 blue='\e[44m'
 nc='\e[0m'
 __updated=false
-
 
 
 # Restrict user account
@@ -34,67 +45,67 @@ __updated=false
 # Move the script to the assigned path
 script_path=$(realpath "${BASH_SOURCE[0]}")
 if [[ ! "$script_path" =~ "$HOME/Desktop" ]]; then
-	target_path="$HOME/Desktop/WWAN_Check.sh"
-	mv "$script_path" "$target_path"
-	if [[ $? == 0 ]]; then
-		echo "Script moved to $HOME/Desktop for execution"
-		script_path="$target_path"
-	else
-		echo "Failed to move script to $HOME/Desktop. Exiting..."
-		exit 1
-	fi
+    target_path="$HOME/Desktop/WWAN_Check.sh"
+    mv "$script_path" "$target_path"
+    if [[ $? == 0 ]]; then
+	echo "Script moved to $HOME/Desktop for execution"
+	script_path="$target_path"
+    else
+        echo "Failed to move script to $HOME/Desktop. Exiting..."
+        exit 1
+    fi
 fi
 cd $HOME/Desktop
 
 
 # Update to the latest version
 UpdateScript() {
-	echo -e 'Checking updates...' 
-	release_url=https://api.github.com/repos/DreamCasterX/WWAN_Check/releases/latest
-	new_version=$(wget -qO- "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
-	release_note=$(wget -qO- "${release_url}" | grep '"body":' | awk -F\" '{print $4}')
-	tarball_url="https://github.com/DreamCasterX/WWAN_Check/archive/refs/tags/${new_version}.tar.gz"
-	if [[ $new_version != $__version__ ]]; then
-		echo -e "⭐️ New version found!\n\nVersion: $new_version\nRelease note:\n$release_note"
-	  	sleep 2
-	  	echo -e "\nDownloading update..."
-	  	pushd "$PWD" > /dev/null 2>&1
-	  	wget --quiet --no-check-certificate --tries=3 --waitretry=2 --output-document=".WWAN_Check.tar.gz" "${tarball_url}"
-	  	if [[ -e ".WWAN_Check.tar.gz" ]]; then
-			tar -xf .WWAN_Check.tar.gz -C "$PWD" --strip-components 1 > /dev/null 2>&1
-			rm -f .WWAN_Check.tar.gz
-			rm -f README.md
-			popd > /dev/null 2>&1
-			sleep 3
-			sudo chmod 755 WWAN_Check.sh
-			echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n"
-			exit 1
-	    	else
-			echo -e "\n❌ Error occured while downloading"
-			exit 1
-	    	fi
-	else
-		echo -e '- Already the latest version\n'
-		__updated=true 
-	fi
+    echo -e 'Checking updates...' 
+    release_url=https://api.github.com/repos/DreamCasterX/WWAN_Check/releases/latest
+    new_version=$(wget -qO- "${release_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
+    release_note=$(wget -qO- "${release_url}" | grep '"body":' | awk -F\" '{print $4}')
+    tarball_url="https://github.com/DreamCasterX/WWAN_Check/archive/refs/tags/${new_version}.tar.gz"
+    if [[ $new_version != $__version__ ]]; then
+        echo -e "⭐️ New version found!\n\nVersion: $new_version\nRelease note:\n$release_note"
+        sleep 2
+        echo -e "\nDownloading update..."
+        pushd "$PWD" > /dev/null 2>&1
+        wget --quiet --no-check-certificate --tries=3 --waitretry=2 --output-document=".WWAN_Check.tar.gz" "${tarball_url}"
+        if [[ -e ".WWAN_Check.tar.gz" ]]; then
+            tar -xf .WWAN_Check.tar.gz -C "$PWD" --strip-components 1 > /dev/null 2>&1
+            rm -f .WWAN_Check.tar.gz
+            rm -f README.md
+            popd > /dev/null 2>&1
+            sleep 3
+            sudo chmod 755 WWAN_Check.sh
+            echo -e "Successfully updated! Please run WWAN_Check.sh again.\n\n"
+            exit 1
+        else
+            echo -e "\n❌ Error occured while downloading"
+            exit 1
+        fi
+    else
+        echo -e '- Already the latest version!\n'
+        __updated=true 
+    fi
 }
 
 
 if [[ $__updated == false ]]; then
-	nslookup google.com > /dev/null
-	if [[ $? == 0 ]]; then 
-		UpdateScript
-	else
-		echo -e "❌ No Internet connection! Check your network and retry"
-	fi
+    nslookup google.com > /dev/null
+    if [[ $? == 0 ]]; then 
+        UpdateScript
+    else
+        echo -e "❌ No Internet connection! Check your network and retry"
+    fi
 fi
-	
-	 
+
+ 
 ######################################### [Configuration] ###################################################
 
 # Create cron job to run script  (start time: 02:40 => resume from S3 + 10 sec)
 RunScript() {
-    echo "*/2 * * * * sleep 40 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -103,14 +114,14 @@ RunS3() {
     sudo crontab -l > mycron 2> /dev/null
     grep -h "systemctl suspend" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
-        echo "*/2 * * * * sudo systemctl suspend && sudo rtcwake -m no -s 30" >> mycron 
+        echo "*/$SLEEP_INTERVAL * * * * sudo systemctl suspend && sudo rtcwake -m no -s $SLEEP_RESUME" >> mycron 
         sudo crontab mycron && sudo rm -f mycron
     fi
 }
 
 # Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
 RunScriptAfterReboot() {
-    echo "@reboot sleep 60 && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "@reboot sleep $REBOOT_RESUME_WAIT && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -119,7 +130,7 @@ RunReboot() {
     sudo crontab -l > mycron 2> /dev/null
     grep -h "shutdown -r" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
-        echo "*/4 * * * * sudo shutdown -r now" >> mycron
+        echo "*/$REBOOT_INTERVAL * * * * sudo shutdown -r now" >> mycron
         sudo crontab mycron && sudo rm -f mycron
     fi
 }
@@ -130,9 +141,8 @@ Clean() {
     crontab -r 2> /dev/null
     sudo crontab -r 2> /dev/null
     systemctl restart cron
-    rm -f ~/$FILE_NAME 2> /dev/null
+    rm -f ~/$FILE_SIZE.zip 2> /dev/null
     sudo rm -f mycron ~/mycron
-    __updated=false
     # nmcli networking on
 }
 
@@ -147,10 +157,10 @@ kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) 2> /dev/null
 echo "Running case #1 - check dmesg"
 wwan_driver=`sudo lspci -k | grep -iEA3 wireless | grep 'Kernel driver in use:' | awk '{print $5}'`  # WWAN => grep 'wireless'   WLAN => grep 'network'      
 sudo dmesg | grep $wwan_driver | grep "Invalid device status 0x1" 
-if [[ $? = 0 ]]; then
-	echo -e "Dmesg Check: ${red}[FAILED]${nc}" >> $TEST_LOG 
-else
+if [[ $? != 0 ]]; then
     echo -e "Dmesg Check: [PASSED]" >> $TEST_LOG
+else
+    echo -e "Dmesg Check: ${red}[FAILED]${nc}" >> $TEST_LOG 
 fi
 
 
@@ -184,24 +194,24 @@ SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F 
 
 # Case 7 - ping test (Fail condition => any packet loss)
 echo "Running case #7 - ping test"
-ping $PING_IP -c 10 | grep -w "0% packet loss"
-if [[ $? = 0 ]]; then
-    echo "Ping Test: [PASSED]" >> $TEST_LOG 
+ping $PING_IP -c $PING_CYCLE | grep -w "0% packet loss"
+if [[ $? != 0 ]]; then
+    echo -e "Ping Test: ${red}[FAILED]${nc}" >> $TEST_LOG
 else
-    echo -e "Ping Test: ${red}[FAILED]${nc}" >> $TEST_LOG 
+    echo "Ping Test: [PASSED]" >> $TEST_LOG 
 fi
 
 
 # Case 8 - download file test
 echo -e "\nRunning case #8 - download file"
-rm -f ~/$FILE_NAME
+rm -f ~/$FILE_SIZE.zip
 wget $FILE_URL -P ~/
-if [[ $(stat -c %s ~/$FILE_NAME 2> /dev/null) == "$FILE_SIZE" ]]; then
+if [[ $(stat -c %s ~/$FILE_SIZE.zip 2> /dev/null) == "$FILE_BYTE" ]]; then
     echo "Download Test: [PASSED]" >> $TEST_LOG
 else
     echo -e "Download Test: ${red}[FAILED]${nc}" >> $TEST_LOG
 fi
-rm -f ~/$FILE_NAME 2> /dev/null
+rm -f ~/$FILE_SIZE.zip 2> /dev/null
 
 
 ######################################### [Test log collection] ###################################################
@@ -222,21 +232,21 @@ sudo crontab -l > mycron 2> /dev/null
 grep -h "WWAN_Check.sh" mycron 2> /dev/null
 if [[ $? != 0 ]]; then
     read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
-        if [[ $POWER_STATE == [Ss] ]]; then
-            RunScript
-            RunS3
-        fi
-        if [[ $POWER_STATE == [Rr] ]]; then
-            RunScriptAfterReboot
-            RunReboot
-        fi
-        if [[ $POWER_STATE == [Cc] ]]; then
-            Clean
-        fi
-        while [[ $POWER_STATE != [SsRrCc] ]]; do
-          echo -e "Wrong input!\n"
-          read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
-        done
+    if [[ $POWER_STATE == [Ss] ]]; then
+        RunScript
+        RunS3
+    fi
+    if [[ $POWER_STATE == [Rr] ]]; then
+        RunScriptAfterReboot
+        RunReboot
+    fi
+    if [[ $POWER_STATE == [Cc] ]]; then
+        Clean
+    fi
+    while [[ $POWER_STATE != [SsRrCc] ]]; do
+        echo -e "Wrong input!\n"
+        read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+    done
 fi
 
 
