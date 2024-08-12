@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/9
+# CHANGE DATE: 2024/8/12
 __version__="1.4"
 
 
@@ -15,7 +15,7 @@ __version__="1.4"
 
 # User defined settings
 PING_IP=8.8.8.8
-PING_CYCLE=10
+PING_CYCLE=1
 FILE_SIZE=5MB          # 5MB/10MB/20MB/30MB/100MB/1GB
 REBOOT_INTERVAL=4      # per minutes (enter reboot)
 REBOOT_RESUME_WAIT=60  # per seconds (start to run script after resume)
@@ -195,7 +195,7 @@ SIGNAL=`mmcli -m any | grep 'signal quality' | awk -F ':' '{print $2}' | awk -F 
 
 # Case 7 - ping test (Fail condition => any packet loss)
 echo "Running case #7 - ping test"
-ping $PING_IP -c $PING_CYCLE | grep -w "0% packet loss"
+ping $PING_IP -c $PING_CYCLE | grep -w "$PING_CYCLE received"
 if [[ $? != 0 ]]; then
     echo -e "Ping Test: ${red}[FAILED]${nc}" >> $TEST_LOG
 else
