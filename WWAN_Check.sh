@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/12
+# CHANGE DATE: 2024/8/13
 __version__="1.4"
 
 
@@ -175,10 +175,10 @@ echo "Running case #3 - check modem manager"
 [[ `mmcli -m any` ]] && echo "ModemManager Check: [PASSED]" >> $TEST_LOG || echo -e "ModemManager Check: ${red}[FAILED]${nc}" >> $TEST_LOG
 
 
-# Case 4 - check cellular network connection state in Network Manager (Fail condition =>  disconnected/unavailable)
+# Case 4 - check cellular network connection state in Network Manager (Fail condition =>  disconnected/unavailable/unmanaged/deactivated)
 echo "Running case #4 - check connection state"
 AP_STATE=$(nmcli device show wwan0mbim0 | grep GENERAL.STATE | cut -d "(" -f2 | cut -d ")" -f1)
-[[ $AP_STATE =~ ^(disconnected|unavailable)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
+[[ $AP_STATE =~ ^(disconnected|unavailable|unmanaged|deactivated)$ ]] && echo -e "AP State: ${red}[FAILED]${nc}" >> $TEST_LOG || echo "AP State: ${AP_STATE^}" >> $TEST_LOG
 
 
 # Case 5 - check IP address in Network Manager (Fail condition => null)
