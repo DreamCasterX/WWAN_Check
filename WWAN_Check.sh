@@ -230,25 +230,21 @@ echo -e "=======================================================================
 
 
 # Run test based on user input
-sudo crontab -l > mycron 2> /dev/null
-grep -h "WWAN_Check.sh" mycron 2> /dev/null
-if [[ $? != 0 ]]; then
-    read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
-    if [[ $POWER_STATE == [Ss] ]]; then
-        RunS3
-        RunScriptAfterS3
-    fi
-    if [[ $POWER_STATE == [Rr] ]]; then
-        RunReboot
-        RunScriptAfterReboot
-    fi
-    if [[ $POWER_STATE == [Cc] ]]; then
-        Clean
-    fi
-    while [[ $POWER_STATE != [SsRrCc] ]]; do
-        echo -e "Wrong input!\n"
-        read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
-    done
+read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+if [[ $POWER_STATE == [Ss] ]]; then
+    RunS3
+    RunScriptAfterS3
 fi
+if [[ $POWER_STATE == [Rr] ]]; then
+    RunReboot
+    RunScriptAfterReboot
+fi
+if [[ $POWER_STATE == [Cc] ]]; then
+    Clean
+fi
+while [[ $POWER_STATE != [SsRrCc] ]]; do
+    echo -e "Wrong input!\n"
+    read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+done
 
 
