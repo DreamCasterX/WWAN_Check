@@ -31,7 +31,7 @@ FILE_URL=http://ipv4.download.thinkbroadband.com/$FILE_SIZE.zip
 [[ $FILE_SIZE == 10MB ]] && FILE_BYTE=10485760 ; [[ $FILE_SIZE == 20MB ]] && FILE_BYTE=20971520 ; [[ $FILE_SIZE == 30MB ]] && FILE_BYTE=31457280
 [[ $FILE_SIZE == 50MB ]] && FILE_BYTE=52428800 ; [[ $FILE_SIZE == 100MB ]] && FILE_BYTE=104857600 ; [[ $FILE_SIZE == 1GB ]] && FILE_BYTE=1073725334
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
-CYCLE=~/count
+CYCLE=~/.count
 red='\e[41m'
 blue='\e[44m'
 green='\e[32m'
@@ -104,12 +104,6 @@ fi
  
 ######################################### [Configuration] ###################################################
 
-# Create cron job to run script  (start time: 02:40 => resume from S3 + 10 sec)
-RunScript() {
-    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
-    crontab mycron && rm -f mycron
-}
-
 # Create cron job for S3 and resume (start time: 02:00   resume: 30 sec)
 RunS3() {
     sudo crontab -l > mycron 2> /dev/null
@@ -120,9 +114,9 @@ RunS3() {
     fi
 }
 
-# Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
-RunScriptAfterReboot() {
-    echo "@reboot sleep $REBOOT_RESUME_WAIT && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+# Create cron job to run script after S3 (start time: 02:40 => resume from S3 + 10 sec)
+RunScriptAfterS3() {
+    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -136,12 +130,19 @@ RunReboot() {
     fi
 }
 
+# Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
+RunScriptAfterReboot() {
+    echo "@reboot sleep $REBOOT_RESUME_WAIT && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    crontab mycron && rm -f mycron
+}
+
 # Delete cron job and restore to default settings
 Clean() {
     rm -f $CYCLE
+    rm -f $INPUT_CYCLE
     crontab -r 2> /dev/null
     sudo crontab -r 2> /dev/null
-    systemctl restart cron
+    sudo systemctl restart cron
     rm -f ~/$FILE_SIZE.zip 2> /dev/null
     sudo rm -f mycron ~/mycron
     # nmcli networking on
@@ -234,12 +235,12 @@ grep -h "WWAN_Check.sh" mycron 2> /dev/null
 if [[ $? != 0 ]]; then
     read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
     if [[ $POWER_STATE == [Ss] ]]; then
-        RunScript
         RunS3
+        RunScriptAfterS3
     fi
     if [[ $POWER_STATE == [Rr] ]]; then
-        RunScriptAfterReboot
         RunReboot
+        RunScriptAfterReboot
     fi
     if [[ $POWER_STATE == [Cc] ]]; then
         Clean
