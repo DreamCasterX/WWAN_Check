@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/13
+# CHANGE DATE: 2024/8/29
 __version__="1.4"
 
 
@@ -16,7 +16,7 @@ __version__="1.4"
 # User defined settings
 PING_IP=8.8.8.8
 PING_CYCLE=1
-FILE_SIZE=5MB          # 5MB/10MB/20MB/30MB/100MB/1GB
+FILE_SIZE=5MB          # 1MB/2MB/5MB/10MB/20MB/30MB/50MB/100MB/1GB
 REBOOT_INTERVAL=4      # per minutes (enter reboot)
 REBOOT_RESUME_WAIT=60  # per seconds (start to run script after resume)
 SLEEP_INTERVAL=2       # per minutes (enter S3)
@@ -27,9 +27,9 @@ SLEEP_RESUME_WAIT=10   # per seconds (start to run script after resume)
 # Fixed settings
 TEST_LOG=$HOME/Desktop/Result.log
 FILE_URL=http://ipv4.download.thinkbroadband.com/$FILE_SIZE.zip 
-[[ $FILE_SIZE == 5MB ]] && FILE_BYTE=5242880 ; [[ $FILE_SIZE == 10MB ]] && FILE_BYTE=10485760
-[[ $FILE_SIZE == 20MB ]] && FILE_BYTE=20971520 ; [[ $FILE_SIZE == 30MB ]] && FILE_BYTE=31457280
-[[ $FILE_SIZE == 100MB ]] && FILE_BYTE=104857600 ; [[ $FILE_SIZE == 1GB ]] && FILE_BYTE=1073725334
+[[ $FILE_SIZE == 1MB ]] && FILE_BYTE=1048576 ; [[ $FILE_SIZE == 2MB ]] && FILE_BYTE=2097152 ; [[ $FILE_SIZE == 5MB ]] && FILE_BYTE=5242880
+[[ $FILE_SIZE == 10MB ]] && FILE_BYTE=10485760 ; [[ $FILE_SIZE == 20MB ]] && FILE_BYTE=20971520 ; [[ $FILE_SIZE == 30MB ]] && FILE_BYTE=31457280
+[[ $FILE_SIZE == 50MB ]] && FILE_BYTE=52428800 ; [[ $FILE_SIZE == 100MB ]] && FILE_BYTE=104857600 ; [[ $FILE_SIZE == 1GB ]] && FILE_BYTE=1073725334
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 CYCLE=~/count
 red='\e[41m'
