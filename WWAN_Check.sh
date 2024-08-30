@@ -2,8 +2,8 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/29
-__version__="1.4"
+# CHANGE DATE: 2024/8/30
+__version__="1.5"
 
 
 # How To Use
@@ -32,6 +32,7 @@ FILE_URL=http://ipv4.download.thinkbroadband.com/$FILE_SIZE.zip
 [[ $FILE_SIZE == 50MB ]] && FILE_BYTE=52428800 ; [[ $FILE_SIZE == 100MB ]] && FILE_BYTE=104857600 ; [[ $FILE_SIZE == 1GB ]] && FILE_BYTE=1073725334
 NOW=$(date +"%Y/%m/%d - %H:%M:%S")
 CYCLE=~/.count
+INPUT_CYCLE=~/.cycle
 red='\e[41m'
 blue='\e[44m'
 green='\e[32m'
@@ -41,6 +42,10 @@ __updated=false
 
 # Restrict user account
 [[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
+
+
+# Allow non-root users to execute commands without password
+sudo sed -i 's/%sudo    ALL=(ALL:ALL) ALL/%sudo ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
 
 
 # Move the script to the assigned path
@@ -116,7 +121,7 @@ RunS3() {
 
 # Create cron job to run script after S3 (start time: 02:40 => resume from S3 + 10 sec)
 RunScriptAfterS3() {
-    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && DISPLAY=:0 bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -132,7 +137,7 @@ RunReboot() {
 
 # Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
 RunScriptAfterReboot() {
-    echo "@reboot sleep $REBOOT_RESUME_WAIT && bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "@reboot sleep $REBOOT_RESUME_WAIT && DISPLAY=:0 bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -229,13 +234,27 @@ echo -e "${blue}*SUMMARY*   Total failures: $fail_count $fail_cycle       Failed
 echo -e "==============================================================================\n" >> $TEST_LOG
 
 
+# Stop the test after arriving at the provided cycle
+[[ -f $INPUT_CYCLE ]] && power=$(cat $INPUT_CYCLE | cut -d "/" -f1) && cycle=$(cat $INPUT_CYCLE | cut -d "/" -f2)
+if [[ -f $INPUT_CYCLE && $cycle != "" ]]; then
+    if [[ $(cat $CYCLE) == $cycle ]]; then
+        Clean
+        zenity --info --title="WWAN_Check" --text="$power test\n$cycle cycle(s) complete\!"
+        exit 0
+    fi
+fi
+
+
 # Run test based on user input
-read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+echo ""
+read -p "Select an action: Suspend(s)   Reboot(r)   Clean(c): " POWER_STATE
 if [[ $POWER_STATE == [Ss] ]]; then
+    read -p "Execution cycles: " S3_CYCLE && echo "Suspend/$S3_CYCLE" > $INPUT_CYCLE
     RunS3
     RunScriptAfterS3
 fi
 if [[ $POWER_STATE == [Rr] ]]; then
+    read -p "Execution cycles: " REBOOT_CYCLE && echo "Reboot/$REBOOT_CYCLE" > $INPUT_CYCLE
     RunReboot
     RunScriptAfterReboot
 fi
@@ -244,7 +263,7 @@ if [[ $POWER_STATE == [Cc] ]]; then
 fi
 while [[ $POWER_STATE != [SsRrCc] ]]; do
     echo -e "Wrong input!\n"
-    read -p "Select an action: Suspend(s) or Reboot(r) or Clean(c): " POWER_STATE
+    read -p "Select an action: Suspend(s)   Reboot(r)   Clean(c): " POWER_STATE
 done
 
 
