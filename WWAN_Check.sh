@@ -3,7 +3,7 @@
 
 # CREATOR: mike.lu@hp.com
 # CHANGE DATE: 2024/9/2
-__version__="1.5"
+__version__="1.6"
 
 
 # How To Use
