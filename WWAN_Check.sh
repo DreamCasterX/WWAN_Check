@@ -45,7 +45,7 @@ __updated=false
 
 
 # Allow non-root users to execute commands without password
-sudo sed -i 's/%sudo    ALL=(ALL:ALL) ALL/%sudo ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
+sudo sed -i 's/%sudo	ALL=(ALL:ALL) ALL/%sudo	ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
 
 
 # Move the script to the assigned path
