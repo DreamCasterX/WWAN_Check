@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/8/30
+# CHANGE DATE: 2024/9/2
 __version__="1.5"
 
 
@@ -38,6 +38,7 @@ blue='\e[44m'
 green='\e[32m'
 nc='\e[0m'
 __updated=false
+display=$(env | grep -w DISPLAY | cut -d '=' -f2)
 
 
 # Restrict user account
@@ -121,7 +122,7 @@ RunS3() {
 
 # Create cron job to run script after S3 (start time: 02:40 => resume from S3 + 10 sec)
 RunScriptAfterS3() {
-    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && DISPLAY=:0 bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "*/$SLEEP_INTERVAL * * * * sleep $(($SLEEP_RESUME+$SLEEP_RESUME_WAIT)) && DISPLAY=$display bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -137,7 +138,7 @@ RunReboot() {
 
 # Create cron job to run script after reboot (start time: reboot + 1 min => for device initialization)
 RunScriptAfterReboot() {
-    echo "@reboot sleep $REBOOT_RESUME_WAIT && DISPLAY=:0 bash $HOME/Desktop/WWAN_Check.sh" >> mycron
+    echo "@reboot sleep $REBOOT_RESUME_WAIT && DISPLAY=$display bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
 }
 
@@ -239,8 +240,7 @@ echo -e "=======================================================================
 if [[ -f $INPUT_CYCLE && $cycle != "" ]]; then
     if [[ $(cat $CYCLE) == $cycle ]]; then
         Clean
-        zenity --info --title="WWAN_Check" --text="$power test\n$cycle cycle(s) complete\!"
-        exit 0
+        zenity --info --title="WWAN_Check" --text="$power test\n$cycle cycle(s) complete\!" && exit 0
     fi
 fi
 
