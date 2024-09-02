@@ -240,7 +240,7 @@ echo -e "=======================================================================
 if [[ -f $INPUT_CYCLE && $cycle != "" ]]; then
     if [[ $(cat $CYCLE) == $cycle ]]; then
         Clean
-        zenity --info --title="WWAN_Check" --text="$power test\n$cycle cycle(s) complete\!" && exit 0
+        zenity --info --title="WWAN_Check" --text="$power test\n$cycle cycle(s) complete\!" --width=180 --height=130 && exit 0
     fi
 fi
 
