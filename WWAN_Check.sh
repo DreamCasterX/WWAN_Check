@@ -160,6 +160,7 @@ RunS5() {
 
 # Delete cron job and restore to default settings
 Clean() {
+    [[ -f $INPUT_CYCLE ]] && mv $TEST_LOG Result_$(cat $INPUT_CYCLE | cut -d "/" -f1)_$(date + "%m-%d-%H:%M").log
     rm -f $CYCLE
     rm -f $INPUT_CYCLE
     crontab -r 2> /dev/null
@@ -265,17 +266,17 @@ fi
 echo ""
 read -p "Select an action: Suspend(s)   Reboot(r)   Poweroff(p)   Clean(c): " POWER_STATE
 if [[ $POWER_STATE == [Ss] ]]; then
-    read -p "Execution cycles: " S3_CYCLE && echo "Suspend/$S3_CYCLE" > $INPUT_CYCLE
+    read -p "Execution cycles: " S3_CYCLE && echo "suspend/$S3_CYCLE" > $INPUT_CYCLE
     RunS3
     RunScriptAfterS3
 fi
 if [[ $POWER_STATE == [Rr] ]]; then
-    read -p "Execution cycles: " REBOOT_CYCLE && echo "Reboot/$REBOOT_CYCLE" > $INPUT_CYCLE
+    read -p "Execution cycles: " REBOOT_CYCLE && echo "reboot/$REBOOT_CYCLE" > $INPUT_CYCLE
     RunReboot
     RunScriptAfterReboot
 fi
 if [[ $POWER_STATE == [Pp] ]]; then
-    read -p "Execution cycles: " S5_CYCLE && echo "Poweroff/$S5_CYCLE" > $INPUT_CYCLE
+    read -p "Execution cycles: " S5_CYCLE && echo "poweroff/$S5_CYCLE" > $INPUT_CYCLE
     RunS5
     RunScriptAfterReboot
 fi
