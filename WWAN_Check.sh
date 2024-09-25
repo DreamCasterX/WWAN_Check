@@ -2,8 +2,8 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/9/2
-__version__="1.6"
+# CHANGE DATE: 2024/9/25
+__version__="1.7"
 
 
 # How To Use
@@ -16,12 +16,14 @@ __version__="1.6"
 # User defined settings
 PING_IP=8.8.8.8
 PING_CYCLE=1
-FILE_SIZE=5MB          # 1MB/2MB/5MB/10MB/20MB/30MB/50MB/100MB/1GB
-REBOOT_INTERVAL=4      # per minutes (enter reboot)
-REBOOT_RESUME_WAIT=60  # per seconds (start to run script after resume)
-SLEEP_INTERVAL=2       # per minutes (enter S3)
-SLEEP_RESUME=30        # per seconds (exit S3)
-SLEEP_RESUME_WAIT=10   # per seconds (start to run script after resume)
+FILE_SIZE=5MB            # 1MB/2MB/5MB/10MB/20MB/30MB/50MB/100MB/1GB
+SLEEP_INTERVAL=2         # per minutes (enter S3)
+SLEEP_RESUME=30          # per seconds (exit S3)
+SLEEP_RESUME_WAIT=10     # per seconds (start to run script after resuming from S3)
+REBOOT_INTERVAL=4        # per minutes (enter reboot)
+POWEROFF_INTERVAL=4      # per minutes (enter S5)
+POWEROFF_RESUME=30       # per seconds (exit S5)
+REBOOT_RESUME_WAIT=60    # per seconds (start to run script after resuming from S5/reboot)
 
 
 # Fixed settings
@@ -42,7 +44,11 @@ display=$(env | grep -w DISPLAY | cut -d '=' -f2)
 
 
 # Restrict user account
-[[ $EUID == 0 ]] && echo -e "⚠️ Please run as non-root user.\n" && exit
+[[ $EUID == 0 ]] && echo -e "⚠️  Please run as non-root user.\n" && exit
+
+
+# Ensure AC is connected
+[[ $(cat /sys/class/power_supply/AC/online) == 0 ]] && echo -e "⚠️  Please connect the AC adapter.\n" && exit 
 
 
 # Allow non-root users to execute commands without password
@@ -129,9 +135,9 @@ RunScriptAfterS3() {
 # Create cron job for Reboot  (start time: 04:00)
 RunReboot() {
     sudo crontab -l > mycron 2> /dev/null
-    grep -h "shutdown -r" mycron 2> /dev/null
+    grep -h "systemctl reboot" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
-        echo "*/$REBOOT_INTERVAL * * * * sudo shutdown -r now" >> mycron
+        echo "*/$REBOOT_INTERVAL * * * * sudo systemctl reboot" >> mycron
         sudo crontab mycron && sudo rm -f mycron
     fi
 }
@@ -140,6 +146,16 @@ RunReboot() {
 RunScriptAfterReboot() {
     echo "@reboot sleep $REBOOT_RESUME_WAIT && DISPLAY=$display bash $HOME/Desktop/WWAN_Check.sh" >> mycron
     crontab mycron && rm -f mycron
+}
+
+# Create cron job for S5  (start time: 04:00)
+RunS5() {
+    sudo crontab -l > mycron 2> /dev/null
+    grep -h "systemctl poweroff" mycron 2> /dev/null
+    if [[ $? != 0 ]]; then
+        echo "*/$POWEROFF_INTERVAL * * * * sudo systemctl poweroff && sudo rtcwake -m no -s $POWEROFF_RESUME" >> mycron 
+        sudo crontab mycron && sudo rm -f mycron
+    fi
 }
 
 # Delete cron job and restore to default settings
@@ -247,7 +263,7 @@ fi
 
 # Run test based on user input
 echo ""
-read -p "Select an action: Suspend(s)   Reboot(r)   Clean(c): " POWER_STATE
+read -p "Select an action: Suspend(s)   Reboot(r)   Poweroff(p)   Clean(c): " POWER_STATE
 if [[ $POWER_STATE == [Ss] ]]; then
     read -p "Execution cycles: " S3_CYCLE && echo "Suspend/$S3_CYCLE" > $INPUT_CYCLE
     RunS3
@@ -258,12 +274,17 @@ if [[ $POWER_STATE == [Rr] ]]; then
     RunReboot
     RunScriptAfterReboot
 fi
+if [[ $POWER_STATE == [Pp] ]]; then
+    read -p "Execution cycles: " S5_CYCLE && echo "Poweroff/$S5_CYCLE" > $INPUT_CYCLE
+    RunS5
+    RunScriptAfterReboot
+fi
 if [[ $POWER_STATE == [Cc] ]]; then
     Clean
 fi
-while [[ $POWER_STATE != [SsRrCc] ]]; do
+while [[ $POWER_STATE != [SsRrPpCc] ]]; do
     echo -e "Wrong input!\n"
-    read -p "Select an action: Suspend(s)   Reboot(r)   Clean(c): " POWER_STATE
+    read -p "Select an action: Suspend(s)   Reboot(r)   Poweroff(p)   Clean(c): " POWER_STATE
 done
 
 
