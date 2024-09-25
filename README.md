@@ -4,7 +4,7 @@
 ### How To Use
 + Run `./WWAN_Check.sh` 
 + Run `cat Result.log` to check if the initial result of cycle #0 is good
-+ Select suspend or reboot stress test to run
++ Select suspend(S3)/reboot/poweroff(S5) stress test to run
 + To stop the trace, turn off WWAN and select 'Clean' from the options
 
 ### Test cases included
