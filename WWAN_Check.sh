@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/9/25
+# CHANGE DATE: 2024/9/26
 __version__="1.7"
 
 
@@ -160,7 +160,7 @@ RunS5() {
 
 # Delete cron job and restore to default settings
 Clean() {
-    [[ -f $INPUT_CYCLE ]] && mv $TEST_LOG Result_$(cat $INPUT_CYCLE | cut -d "/" -f1)_$(date + "%m%d-%H-%M").log
+    [[ -f $INPUT_CYCLE ]] && mv $TEST_LOG Result_$(cat $INPUT_CYCLE | cut -d "/" -f1)_$(date +"%m%d-%H-%M").log
     rm -f $CYCLE
     rm -f $INPUT_CYCLE
     crontab -r 2> /dev/null
