@@ -9,7 +9,7 @@ __version__="1.7"
 # How To Use
 # 1) Run `./WWAN_Check.sh` 
 # 3) Run `cat Result.log` to check if the initial result of cycle #0 is good
-# 4) Select suspend or reboot stress test to continue
+# 4) Select suspend/reboot/poweroff stress test to continue
 # 5) To stop the trace, disconnect network and select 'Clean' from the options
 
 
@@ -21,9 +21,9 @@ SLEEP_INTERVAL=2         # per minutes (enter S3)
 SLEEP_RESUME=30          # per seconds (exit S3)
 SLEEP_RESUME_WAIT=10     # per seconds (start to run script after resuming from S3)
 REBOOT_INTERVAL=4        # per minutes (enter reboot)
+REBOOT_RESUME_WAIT=60    # per seconds (start to run script after resuming from reboot/S5)
 POWEROFF_INTERVAL=4      # per minutes (enter S5)
 POWEROFF_RESUME=30       # per seconds (exit S5)
-REBOOT_RESUME_WAIT=60    # per seconds (start to run script after resuming from S5/reboot)
 
 
 # Fixed settings
