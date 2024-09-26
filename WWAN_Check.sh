@@ -40,7 +40,7 @@ blue='\e[44m'
 green='\e[32m'
 nc='\e[0m'
 __updated=false
-display=$(env | grep -w DISPLAY | cut -d '=' -f2)
+display=$(printenv DISPLAY)
 
 
 # Restrict user account
