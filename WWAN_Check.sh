@@ -2,7 +2,7 @@
 
 
 # CREATOR: mike.lu@hp.com
-# CHANGE DATE: 2024/9/26
+# CHANGE DATE: 2024/10/22
 __version__="1.7"
 
 
@@ -151,9 +151,9 @@ RunScriptAfterReboot() {
 # Create cron job for S5  (start time: 04:00)
 RunS5() {
     sudo crontab -l > mycron 2> /dev/null
-    grep -h "systemctl poweroff" mycron 2> /dev/null
+    grep -h "rtcwake -m off" mycron 2> /dev/null
     if [[ $? != 0 ]]; then
-        echo "*/$POWEROFF_INTERVAL * * * * sudo systemctl poweroff && sudo rtcwake -m no -s $POWEROFF_RESUME" >> mycron 
+        echo "*/$POWEROFF_INTERVAL * * * * sudo rtcwake -m off -s $POWEROFF_RESUME" >> mycron 
         sudo crontab mycron && sudo rm -f mycron
     fi
 }
