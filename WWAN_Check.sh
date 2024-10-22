@@ -23,7 +23,7 @@ SLEEP_RESUME_WAIT=10     # per seconds (start to run script after resuming from 
 REBOOT_INTERVAL=4        # per minutes (enter reboot)
 REBOOT_RESUME_WAIT=60    # per seconds (start to run script after resuming from reboot/S5)
 POWEROFF_INTERVAL=4      # per minutes (enter S5)
-POWEROFF_RESUME=30       # per seconds (exit S5)
+POWEROFF_RESUME=40       # per seconds (exit S5)
 
 
 # Fixed settings
